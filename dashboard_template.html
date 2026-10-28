@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>옹굴 키워드 대시보드</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f6f5f1; --surface:#fcfcfb; --line:#e6e4dd; --line-soft:#efeee9;
+  --text:#1b1b19; --text-2:#52514e; --muted:#8a8984;
+  --accent:#2a78d6; --accent-soft:#e3eefb; --clover:#2f7d4f; --clover-soft:#e4f1e8;
+  --star:#b7791f; --new:#d64545; --new-soft:#fbe7e7;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#121211; --surface:#1a1a19; --line:#2c2c2a; --line-soft:#232321;
+    --text:#f0efec; --text-2:#c3c2b7; --muted:#8f8e88;
+    --accent:#3987e5; --accent-soft:#1d2a3a; --clover:#4fae75; --clover-soft:#1b2c22;
+    --star:#e0a541; --new:#e66767; --new-soft:#3a1f1f;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#121211; --surface:#1a1a19; --line:#2c2c2a; --line-soft:#232321;
+  --text:#f0efec; --text-2:#c3c2b7; --muted:#8f8e88;
+  --accent:#3987e5; --accent-soft:#1d2a3a; --clover:#4fae75; --clover-soft:#1b2c22;
+  --star:#e0a541; --new:#e66767; --new-soft:#3a1f1f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 16px 64px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:24px;margin:0;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+h1 .leaf{color:var(--clover)}
+.sub{color:var(--text-2);font-size:13px;margin-top:4px}
+h2{font-size:16px;margin:0 0 4px;letter-spacing:-.01em}
+.hint{color:var(--muted);font-size:13px;margin:0 0 16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(4,1fr);margin-bottom:12px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi .label{color:var(--text-2);font-size:13px}
+.kpi .num{font-size:28px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .note{color:var(--muted);font-size:12px}
+.two{grid-template-columns:1.1fr .9fr;margin-bottom:12px}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+/* bars */
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar-row{display:grid;grid-template-columns:72px 1fr 64px;align-items:center;gap:10px;font-size:13px;
+  cursor:pointer;border-radius:8px;padding:3px 4px;margin:0 -4px}
+.bar-row:hover,.bar-row.on{background:var(--line-soft)}
+.bar-row .nm{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{height:14px;position:relative}
+.bar{height:100%;background:var(--accent);border-radius:0 4px 4px 0;min-width:2px}
+.bar-row .val{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.tip{position:fixed;pointer-events:none;background:var(--text);color:var(--surface);font-size:12px;
+  padding:6px 9px;border-radius:8px;opacity:0;transition:opacity .1s;z-index:10;white-space:nowrap}
+/* top picks */
+.picks{display:flex;flex-direction:column;gap:8px}
+.pick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;
+  border:1px solid var(--line);border-radius:10px}
+.pick b{font-weight:600}
+.pick .meta{color:var(--text-2);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--text-2);border-radius:999px;
+  padding:5px 11px;font-size:13px;cursor:pointer;font-family:inherit}
+.chip.on{background:var(--text);color:var(--surface);border-color:var(--text)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--text-2);padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
+.seg button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+input[type=search]{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:999px;
+  padding:6px 12px;font:inherit;font-size:13px;min-width:180px;flex:1;max-width:260px}
+.spacer{flex:1}
+/* table */
+.tbl-wrap{overflow-x:auto;margin:0 -20px;padding:0 20px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:620px}
+th{color:var(--muted);font-weight:500;font-size:12px;text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);
+  cursor:pointer;user-select:none;white-space:nowrap}
+th.num,td.num{text-align:right}
+th .arr{opacity:.4}
+th.sorted .arr{opacity:1;color:var(--accent)}
+td{padding:9px 8px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+tr.done td{opacity:.45}
+.kw{font-weight:600;cursor:copy}
+.kw:hover{color:var(--accent)}
+.vol{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-variant-numeric:tabular-nums}
+.vol i{display:block;height:6px;border-radius:0 3px 3px 0;background:var(--accent);opacity:.55}
+.star{color:var(--star);font-size:15px}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:1px}
+.tag.new{background:var(--new-soft);color:var(--new)}
+.tag.reg{background:var(--line-soft);color:var(--text-2);font-weight:500}
+.comp{font-size:12px;color:var(--text-2)}
+.state{border:1px solid var(--line);background:var(--surface);border-radius:999px;font:inherit;font-size:12px;
+  padding:3px 9px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.state.plan{background:var(--accent-soft);color:var(--accent);border-color:transparent;font-weight:600}
+.state.done{background:var(--clover-soft);color:var(--clover);border-color:transparent;font-weight:600}
+.more{display:block;margin:14px auto 0;border:1px solid var(--line);background:var(--surface);color:var(--text-2);
+  border-radius:999px;padding:7px 16px;font:inherit;font-size:13px;cursor:pointer}
+.empty{color:var(--muted);font-size:13px;padding:24px 0;text-align:center}
+.cites-sum{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px}
+.cites-sum div{font-size:13px;color:var(--text-2)}
+.cites-sum b{font-size:20px;color:var(--text);margin-right:2px;font-variant-numeric:tabular-nums}
+.ok{color:var(--clover);font-weight:600}.no{color:var(--muted)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);
+  padding:8px 14px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+.legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:10px}
+section{margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span class="leaf">☘</span> 옹굴 키워드 대시보드</h1>
+      <div class="sub" id="sub"></div>
+    </div>
+  </header>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <div class="grid two">
+    <div class="card">
+      <h2>지역별 추천 키워드</h2>
+      <p class="hint">막대를 누르면 아래 표가 그 지역으로 걸러져요.</p>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="card">
+      <h2>이번 주 먼저 쓸 키워드</h2>
+      <p class="hint">경쟁 낮음(★) 우선, 부족하면 ☆로 채움 · 아직 안 쓴 것만</p>
+      <div class="picks" id="picks"></div>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>추천 키워드</h2>
+    <p class="hint">키워드를 누르면 복사돼요. 상태 버튼으로 '쓸 예정 → 작성 완료'를 표시해두면 이 브라우저에 저장됩니다.</p>
+    <div class="filters">
+      <div class="seg" id="segStar">
+        <button data-v="star">★만</button><button data-v="rec" class="on">★☆ 추천</button><button data-v="all">전체</button>
+      </div>
+      <div class="seg" id="segState">
+        <button data-v="any" class="on">모두</button><button data-v="plan">쓸 예정</button><button data-v="todo">안 쓴 것</button>
+      </div>
+      <input type="search" id="q" placeholder="키워드 검색 (예: 오마카세)">
+    </div>
+    <div class="chips" id="chips" style="margin-bottom:12px"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th data-s="state">상태</th>
+          <th data-s="k">키워드 <span class="arr">↕</span></th>
+          <th data-s="v" class="num sorted">월 검색량 <span class="arr">↓</span></th>
+          <th data-s="c">경쟁 <span class="arr">↕</span></th>
+          <th data-s="m" class="num">모바일 <span class="arr">↕</span></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="empty" hidden>조건에 맞는 키워드가 없어요.</div>
+    <button class="more" id="more" hidden>더 보기</button>
+    <div class="legend"><span>★ 경쟁 낮음 · ☆ 경쟁 중간 (검색광고 기준, 참고용)</span><span id="newLegend"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>AI 브리핑 인용 기록</h2>
+    <p class="hint">ai_citations.csv 에 직접 검색해본 결과를 적으면 다음 실행 때 여기에 모여요.</p>
+    <div id="cites"></div>
+  </section>
+</div>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const D = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const fmt = n => n.toLocaleString('ko-KR');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const store = {
+  get(){ try { return JSON.parse(localStorage.getItem('ongul-kw-state') || '{}'); } catch(e){ return {}; } },
+  set(o){ try { localStorage.setItem('ongul-kw-state', JSON.stringify(o)); } catch(e){} }
+};
+let ST = store.get();
+const stateOf = k => ST[k] || '';
+
+const st = { star:'rec', state:'any', q:'', region:'', sort:'v', dir:-1, limit:60 };
+const rows = D.rows;
+const recRows = rows.filter(r => r.s);
+const isNewRun = D.hasPrev;
+
+// header + KPIs
+$('#sub').textContent = `마지막 실행 ${D.date} · ourfourleaf` + (D.prevFile ? ` · 지난 결과와 비교` : '');
+const nNew = recRows.filter(r => r.n).length;
+const citeYes = D.cites.filter(c => c.c === 'O').length;
+const kpi = (label, num, note) => `<div class="card kpi"><div class="label">${label}</div><div class="num">${num}</div><div class="note">${note}</div></div>`;
+$('#kpis').innerHTML =
+  kpi('조회한 키워드', fmt(rows.length), `이미 쓴 키워드 ${fmt(rows.filter(r=>r.w).length)}개 제외`) +
+  kpi('추천 키워드', fmt(recRows.length), `★ ${recRows.filter(r=>r.s==='★').length} · ☆ ${recRows.filter(r=>r.s==='☆').length}`) +
+  kpi('새로 등장', isNewRun ? fmt(nNew) : '–', isNewRun ? '어제 실행 대비 추천 신규' : '다음 실행부터 비교돼요') +
+  kpi('AI 인용', D.cites.length ? `${citeYes}<span style="font-size:15px;color:var(--muted);font-weight:500"> / ${D.cites.length}</span>` : '–', D.cites.length ? '인용됨 / 확인한 키워드' : '아직 기록 없음');
+
+// region bars
+const byReg = {};
+recRows.forEach(r => { const g = r.r || '기타'; (byReg[g] = byReg[g] || {n:0, v:0}); byReg[g].n++; byReg[g].v += r.v; });
+const regs = Object.entries(byReg).sort((a,b) => b[1].n - a[1].n);
+const maxN = Math.max(1, ...regs.map(x => x[1].n));
+const tip = $('#tip');
+$('#bars').innerHTML = regs.slice(0, 12).map(([g, o]) =>
+  `<div class="bar-row" data-r="${esc(g)}" data-tip="${esc(g)} · 추천 ${o.n}개 · 검색량 합계 월 ${fmt(o.v)}회">
+     <span class="nm">${esc(g)}</span>
+     <span class="bar-track"><span class="bar" style="width:${(o.n/maxN*100).toFixed(1)}%;display:block"></span></span>
+     <span class="val">${o.n}개</span></div>`).join('') || '<div class="empty">추천 키워드가 없어요.</div>';
+document.querySelectorAll('.bar-row').forEach(el => {
+  el.addEventListener('mousemove', e => { tip.textContent = el.dataset.tip; tip.style.opacity = 1;
+    tip.style.left = (e.clientX + 12) + 'px'; tip.style.top = (e.clientY + 12) + 'px'; });
+  el.addEventListener('mouseleave', () => tip.style.opacity = 0);
+  el.addEventListener('click', () => { const g = el.dataset.r; st.region = (st.region === g ? '' : g); if (st.star==='star' && !recRows.some(r=>r.s==='★' && (r.r||'기타')===st.region)) st.star='rec'; syncSeg(); render(); document.querySelector('#chips').scrollIntoView({behavior:'smooth', block:'center'}); });
+});
+
+// top picks
+const picks = recRows.filter(r => r.s === '★' && stateOf(r.k) !== 'done').sort((a,b) => b.v - a.v).slice(0, 5);
+const picksFill = picks.length >= 5 ? picks : picks.concat(recRows.filter(r => r.s==='☆' && stateOf(r.k)!=='done').sort((a,b)=>b.v-a.v).slice(0, 5 - picks.length));
+$('#picks').innerHTML = picksFill.map(r =>
+  `<div class="pick"><span><span class="star">${r.s}</span> <b class="kw" data-k="${esc(r.k)}">${esc(r.k)}</b>${r.n?'<span class="tag new">NEW</span>':''}</span>
+   <span class="meta">월 ${fmt(r.v)}회 · 경쟁 ${esc(r.c)}</span></div>`).join('') || '<div class="empty">추천 키워드가 없어요.</div>';
+
+// region chips
+function renderChips(){
+  const list = [['', '전체 지역']].concat(regs.map(([g]) => [g, g]));
+  $('#chips').innerHTML = list.map(([v, l]) => `<button class="chip ${st.region===v?'on':''}" data-v="${esc(v)}">${esc(l)}</button>`).join('');
+  document.querySelectorAll('.chip').forEach(b => b.onclick = () => { st.region = b.dataset.v; st.limit = 60; render(); });
+  document.querySelectorAll('.bar-row').forEach(el => el.classList.toggle('on', el.dataset.r === st.region));
+}
+
+function syncSeg(){
+  document.querySelectorAll('#segStar button').forEach(b => b.classList.toggle('on', b.dataset.v === st.star));
+  document.querySelectorAll('#segState button').forEach(b => b.classList.toggle('on', b.dataset.v === st.state));
+}
+document.querySelectorAll('#segStar button').forEach(b => b.onclick = () => { st.star = b.dataset.v; st.limit = 60; syncSeg(); render(); });
+document.querySelectorAll('#segState button').forEach(b => b.onclick = () => { st.state = b.dataset.v; st.limit = 60; syncSeg(); render(); });
+$('#q').addEventListener('input', e => { st.q = e.target.value.trim().replace(/\s/g,''); st.limit = 60; render(); });
+document.querySelectorAll('th[data-s]').forEach(th => th.onclick = () => {
+  const s = th.dataset.s; if (s === 'state') return;
+  if (st.sort === s) st.dir *= -1; else { st.sort = s; st.dir = (s === 'k' || s === 'c') ? 1 : -1; }
+  document.querySelectorAll('th').forEach(t => { t.classList.toggle('sorted', t.dataset.s === st.sort);
+    const a = t.querySelector('.arr'); if (a) a.textContent = t.dataset.s === st.sort ? (st.dir < 0 ? '↓' : '↑') : '↕'; });
+  render();
+});
+$('#more').onclick = () => { st.limit += 100; render(); };
+
+const compRank = {'낮음':0,'중간':1,'높음':2};
+const STATES = ['', 'plan', 'done'];
+const STATE_LABEL = {'':'—', plan:'쓸 예정', done:'작성 완료'};
+
+function filtered(){
+  let list = st.star === 'star' ? rows.filter(r => r.s === '★') : st.star === 'rec' ? recRows : rows.filter(r => !r.w);
+  if (st.region) list = list.filter(r => (r.r || '기타') === st.region);
+  if (st.q) list = list.filter(r => r.k.includes(st.q));
+  if (st.state === 'plan') list = list.filter(r => stateOf(r.k) === 'plan');
+  if (st.state === 'todo') list = list.filter(r => stateOf(r.k) !== 'done');
+  const key = st.sort;
+  return list.slice().sort((a, b) => {
+    let x = a[key], y = b[key];
+    if (key === 'c') { x = compRank[x] ?? 3; y = compRank[y] ?? 3; }
+    if (key === 'k') return a.k.localeCompare(b.k, 'ko') * st.dir;
+    return (x - y) * st.dir || b.v - a.v;
+  });
+}
+
+function render(){
+  renderChips();
+  const list = filtered();
+  const maxV = Math.max(1, ...list.slice(0, st.limit).map(r => r.v));
+  $('#tbody').innerHTML = list.slice(0, st.limit).map(r => {
+    const s = stateOf(r.k);
+    return `<tr class="${s==='done'?'done':''}">
+      <td><button class="state ${s}" data-k="${esc(r.k)}">${STATE_LABEL[s]}</button></td>
+      <td><span class="star">${r.s || ''}</span> <span class="kw" data-k="${esc(r.k)}">${esc(r.k)}</span>${r.n?'<span class="tag new">NEW</span>':''}${r.r && !st.region?`<span class="tag reg">${esc(r.r)}</span>`:''}</td>
+      <td class="num"><span class="vol"><i style="width:${Math.max(2, r.v/maxV*90).toFixed(0)}px"></i>${fmt(r.v)}</span></td>
+      <td><span class="comp">${esc(r.c)}</span></td>
+      <td class="num">${r.m}%</td></tr>`;
+  }).join('');
+  $('#empty').hidden = list.length > 0;
+  $('#more').hidden = list.length <= st.limit;
+  $('#more').textContent = `더 보기 (${fmt(list.length - st.limit)}개 남음)`;
+  document.querySelectorAll('.state').forEach(b => b.onclick = () => {
+    const k = b.dataset.k; const nxt = STATES[(STATES.indexOf(stateOf(k)) + 1) % 3];
+    if (nxt) ST[k] = nxt; else delete ST[k]; store.set(ST); render();
+  });
+  bindCopy();
+}
+
+function bindCopy(){
+  document.querySelectorAll('.kw').forEach(el => el.onclick = () => {
+    const k = el.dataset.k;
+    const done = () => toast(`'${k}' 복사했어요`);
+    if (navigator.clipboard) navigator.clipboard.writeText(k).then(done, () => toast(k)); else toast(k);
+  });
+}
+let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.style.opacity = 1; clearTimeout(tt); tt = setTimeout(() => t.style.opacity = 0, 1400); }
+
+// citations
+(function(){
+  const c = D.cites;
+  if (!c.length) { $('#cites').innerHTML = `<div class="empty">아직 기록이 없어요.<br>네이버에서 추천 키워드를 검색해보고, AI 브리핑이 떴는지 · 내 글이 출처에 있는지를 ai_citations.csv 에 적어주세요.</div>`; return; }
+  const brief = c.filter(x => x.b === 'O').length, yes = c.filter(x => x.c === 'O').length;
+  $('#cites').innerHTML = `<div class="cites-sum">
+      <div><b>${c.length}</b>개 확인</div><div><b>${brief}</b>개 AI 브리핑 노출</div>
+      <div><b class="ok">${yes}</b>개 내 글 인용</div>
+      <div><b>${brief ? Math.round(yes/brief*100) : 0}%</b> 인용률 (브리핑 뜬 것 중)</div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>날짜</th><th>키워드</th><th>AI 브리핑</th><th>내 글 인용</th><th>메모</th></tr></thead><tbody>
+    ${c.slice().reverse().map(x => `<tr><td>${esc(x.d)}</td><td><b>${esc(x.k)}</b></td>
+      <td class="${x.b==='O'?'ok':'no'}">${x.b==='O'?'노출':x.b==='X'?'없음':'–'}</td>
+      <td class="${x.c==='O'?'ok':'no'}">${x.c==='O'?(x.u?`<a href="${esc(x.u)}" target="_blank" style="color:inherit">인용됨 ↗</a>`:'인용됨'):x.c==='X'?'아님':'–'}</td>
+      <td style="color:var(--text-2);font-size:13px">${esc(x.memo||'')}</td></tr>`).join('')}
+    </tbody></table></div>`;
+})();
+
+$('#newLegend').textContent = isNewRun ? 'NEW 지난 실행엔 없던 추천' : '';
+bindCopy();
+render();
+</script>
+</body>
+</html>
